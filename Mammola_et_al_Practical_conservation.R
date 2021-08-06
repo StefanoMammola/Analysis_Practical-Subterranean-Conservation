@@ -141,6 +141,8 @@ alpha3 <- 0.6
 
 db <- read.csv(file = "Data/Database_Practical_conservation.csv", sep = '\t', dec = '.', header = TRUE, as.is = FALSE)
 
+# Information on the columns are in the file METADATA_Database_Practical_conservation.pdf  found in the same folder of the database): 
+
 str(db)
 summary(db)
 
