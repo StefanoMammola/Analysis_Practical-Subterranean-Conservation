@@ -17,10 +17,6 @@
 
 rm(list = ls())
 
-# Working directory -------------------------------------------------------
-
-setwd("/Users/stefanomammola/Desktop/Practical conservation review/analysis") #change with your working directory
-
 # Loading R package -------------------------------------------------------
 
 library("circlize")      
@@ -139,7 +135,7 @@ alpha3 <- 0.6
 
 # Loading the Database ----------------------------------------------------
 
-db <- read.csv(file = "Database_Practical_conservation.csv",sep='\t', dec='.',header=T,as.is=F)
+db <- read.csv(file = "Data/Database_Practical_conservation.csv",sep='\t', dec='.',header=T,as.is=F)
 
 str(db)
 summary(db)
@@ -393,7 +389,7 @@ table(db$Conservation_Action) / sum(table(db$Conservation_Action)) # %
 
 # Arrange on a grid -------------------------------------------------------
 
-pdf(file = "Figure_2.pdf", width = 10, height =11)
+pdf(file = "Figure/Figure_2.pdf", width = 10, height =11)
 
 ggpubr::ggarrange(map2,
                   ggpubr::ggarrange(bar_p2, 
@@ -487,7 +483,7 @@ chord_plot1  <- cowplot::as_grob(chord_plot1)
 chord_plot1  <- ggpubr::as_ggplot(chord_plot1)
 
 
-pdf(file = "Figure_3_no_silouhette.pdf", width = 10, height = 10)
+pdf(file = "Figure/Figure_3_no_silouhette.pdf", width = 10, height = 10)
 par(mar=c(2,2,2,2))
 ggpubr::ggarrange(chord_plot1, nrow= 1, ncol = 1)
 dev.off()
@@ -783,7 +779,7 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
     annotate(geom="text", hjust = 0,vjust = 0.3,
              x= 2021.5, y= logisticline_max(y2, model2[[02]])[21], 
              label = levels(factor(db_yr3$Impact))[2],
-             color=COL2[6])+
+             color=COL2[2])+
     
     coord_cartesian(xlim = c(2000, 2021), # This focuses the x-axis on the range of interest
                     clip = 'off') +     # This keeps the labels from disappearing
@@ -794,7 +790,7 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
 
 # Arrange on a grid -------------------------------------------------------
 
-pdf(file = "Figure_4.pdf", width = 14, height = 10)
+pdf(file = "Figure/Figure_4.pdf", width = 14, height = 10)
 
 ggpubr::ggarrange(Plot_trend0, ggpubr::ggarrange(Plot_trend2, Plot_trend1,
                                                  ncol = 2, nrow = 1, 
@@ -810,7 +806,7 @@ dev.off()
 
 ## End of analysis ------------------
 
-#Extra
+# Extra figures
 
 ## CHORD DIAGRAM 2 - Conservation action vs Taxonomy
 
@@ -865,5 +861,3 @@ chord_plot2()
 #Convert as ggplot2 object
 chord_plot2  <- cowplot::as_grob(chord_plot2)
 chord_plot2  <- ggpubr::as_ggplot(chord_plot2)
-
--...................
