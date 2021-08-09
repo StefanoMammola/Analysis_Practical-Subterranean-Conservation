@@ -784,7 +784,7 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
     annotate(geom="text", hjust = 0,vjust = 0.3,
              x= 2021.5, y= logisticline_max(y2, model2[[02]])[21], 
              label = levels(factor(db_yr3$Impact))[2],
-             color=COL2[6])+
+             color=COL2[2])+
     
     coord_cartesian(xlim = c(2000, 2021), # This focuses the x-axis on the range of interest
                     clip = 'off') +     # This keeps the labels from disappearing
