@@ -7,9 +7,9 @@
 # 'R script to reproduce the analyses'
 ## ------------------------------------------------------------------------
 
-# Analysis performed with R (v. R 4.0.3) and R studio (v. 1.4.1103)
-# Authors: Stefano Mammola & Melissa Meierhofer
-# Location: Helsinki, May-Jul 2021
+# Analysis performed with R (v. R 4.1.0) and R studio (v. 1.4.1103)
+# Authors (code): Stefano Mammola & Melissa B. Meierhofer
+# Location: Helsinki, May-Aug 2021
 
 ###############################################################
 
@@ -85,10 +85,9 @@ semi_colon_splitter <- function(input1, input2, names = c("input1","input2")){
 
 # Parameters for plots ----------------------------------------------------
 
-# Plot style. Modified from:
-# https://ourcodingclub.github.io/tutorials/dataviz-beautification-synthesis/
+# Plot style (ggplot2)
 
-theme_niwot <- function(){
+theme_custom <- function(){
   theme_bw() +
     theme(#text = element_text(family = "Arial"),
       axis.text = element_text(size = 10), 
@@ -114,7 +113,7 @@ theme_niwot <- function(){
 # Colors for Figure 2
 col_fig2 <- c("grey10","darkorchid3")
 
-# Colors ad parameters for Figure 4
+# Colors and parameters for Figure 4
 COL  <- c(rep("grey40",4),"darkgoldenrod2","brown4")
 
 COL2 <- c("blue", "palevioletred4",
@@ -143,13 +142,23 @@ summary(db)
 #Database only with distinct paper
 db_unique <- distinct(db, ID, .keep_all = TRUE) 
 
+#Checking levels of factors
+levels(db$Taxon_Group)
+levels(db$Tested_statistically)
+levels(db$Higher_Geography)
+levels(db$System)
+levels(db$Domain)
+levels(db$Taxon_Group)
+levels(db$Impact)
+levels(db$Conservation_Group)
+levels(db$Conservation_Action)
+
 #Summary statistics
 table(db_unique$Source) ; sum(table(db_unique$Source)) # N° of unique sources
 table(db$Tested_statistically) ; table(db$Tested_statistically)[2] / sum(table(db$Tested_statistically)) #N° and % testing
 mean(table(db$ID)) ; SE(table(db$ID)) # mean number of actions/paper
 
 round(table(db$Tested_statistically == "yes",db$Conservation_Action)[2,]/table(db$Conservation_Action),2)#% testing by conservation action
-
 
 #Redefining impact
 db$Impact2 <- db$Impact
@@ -165,22 +174,20 @@ levels(db$Impact2)   <- c("Alien species\nPathogens",
                           "Habitat change\n(surface)",
                           "Visitors")
 
-levels(db$Taxon_Group)
-levels(db$Tested_statistically)
-
 #####################################
 ### FIGURE 2:::::::::::::::::::::::::
 #####################################
 
 # Map ---------------------------------------------------------------------
 
+levels(db$Higher_Geography)
 pie1 <- semi_colon_splitter(input1 = db$Higher_Geography,
                             input2 = db$Tested_statistically, 
                             names = c("Higher_Geography","Tested_statistically"))
 
 #summary stats
 table(pie1$Higher_Geography) # tot
-table(pie1$Higher_Geography)/ sum(table(pie1$Higher_Geography)) # %
+table(pie1$Higher_Geography)/sum(table(pie1$Higher_Geography)) # %
 
 pie_1 <- data.frame(table(pie1$Higher_Geography,pie1$Tested_statistically))
 
@@ -286,10 +293,10 @@ bar_1$Var2 <- factor(bar_1$Var2,levels = c("Alien species\nPathogens","Climate\n
     geom_text(aes(label=Freq), vjust=-1, color="black",
               position = position_dodge(0.9), size=2.5)+
     
-    ylim(0,250)+
+    ylim(0,315)+
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = "Frequency")+
-    theme_niwot()+
+    theme_custom()+
     theme(legend.position =  "none",
           axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
           plot.margin = unit(c(0.2,0.2,0.2,0.2), 'cm')) 
@@ -327,7 +334,7 @@ bar_3$Var2 <- factor(bar_3$Var2,levels = c("Anchialine\n& Marine","Groundwater",
     
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = "Frequency")+
-    theme_niwot()+
+    theme_custom()+
     theme(legend.position =  "none",
           axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
           plot.margin = unit(c(0.2,0.2,0.2,0.2), 'cm')) 
@@ -354,11 +361,10 @@ bar_4$Var2 <- factor(bar_4$Var2, levels = c("Arthropoda","Other invertebrates",
     geom_bar(stat="identity",position=position_dodge(), alpha=1, color = "grey20")+
     geom_text(aes(label=Freq), vjust=-1, color="black",
               position = position_dodge(0.9), size=2.5)+
-    ylim(0,400)+
     
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = NULL)+
-    theme_niwot()+
+    theme_custom()+
     theme(legend.position = "none",
           axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
           plot.margin = unit(c(0.2,0.2,0.2,0.2), 'cm'))
@@ -380,10 +386,10 @@ table(db$Conservation_Action) / sum(table(db$Conservation_Action)) # %
     
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = NULL)+
-    theme_niwot()+
+    theme_custom()+
     theme(legend.position = "none",
           axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,
-                                     face = c(rep("plain",2),"italic",rep("plain",14))),
+                                     face = c(rep("plain",3),"italic",rep("plain",13))),
           plot.margin = unit(c(0.2,0.2,0.2,0.2), 'cm'))
 )
 
@@ -411,6 +417,8 @@ dev.off()
 
 ## CHORD DIAGRAM 1 - Conservation action vs Impact
 ## https://www.data-to-viz.com/graph/chord.html
+
+levels(db$Conservation_Group)
 
 chord_plot1  <- function(){
   require("gridGraphics")
@@ -440,9 +448,9 @@ chord_plot1  <- function(){
                             "Climate\nchange",
                             "None",
                             "Alien species\nPathogens",
-                            "Overexploitation\n& Poaching",
+                            "Overexploitation\nPoaching",
                             "Pollution",
-                            "    Habitat change\n    (subterranean)",
+                            "    Habitat change\n    (subterranean)",#space is needed for graphical reasons
                             "Habitat change\n(surface)",
                             "Visitors")
   
@@ -460,8 +468,9 @@ chord_plot1  <- function(){
                "Monitoring", "Assessment", "Protection", 
                "Alien species\nPathogens","Pollution", 
                "Climate\nchange", "Habitat change\n(surface)",
-               "Visitors" ,"Overexploitation\n& Poaching",
-               "    Habitat change\n    (subterranean)","None")
+               "Visitors" ,"Overexploitation\nPoaching",
+               "    Habitat change\n    (subterranean)",#space is needed for graphical reasons
+               "None")
   
   col_l <- c("lightcyan4","brown4","darkgoldenrod2","darkblue","cyan4","blueviolet",rep("grey30",nlevels(mat$to)))
   
@@ -489,7 +498,6 @@ ggpubr::ggarrange(chord_plot1, nrow= 1, ncol = 1)
 dev.off()
 
 # Silouhettes where prepared by Irene Frigo with Adobe Illustrator and have been added to Figure 3 outside R, using the program Inkscape.
-
 
 #####################################
 ### FIGURE 4:::::::::::::::::::::::::
@@ -537,7 +545,7 @@ y <- seq(from = min(glm$yr), to = max(glm$yr), 1)
                             round(pM1$p[2],3),
                             sep=''),size = 4)+
     
-    theme_niwot() )
+    theme_custom() )
   
 #add missing years for the plot
 yr <- seq(from = range(as.numeric(as.character(bar_1$yr)))[1], to = range(as.numeric(as.character(bar_1$yr)))[2], by = 1)
@@ -563,7 +571,7 @@ Plot_trend0 <- ggplot(bar_1, aes(x=yr, y=as.numeric(N), fill=Tested))+
        x=NULL, 
        y = "Frequency",
        subtitle = NULL)+
-  theme_niwot()+
+  theme_custom()+
   theme(legend.position = "top",
         plot.subtitle = element_text(size = 12, color = "#222222"),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
@@ -677,7 +685,7 @@ y2 <- seq(from = min(db_yr2$yr), to = max(db_yr2$yr), 1) #temporal series of int
     coord_cartesian(xlim = c(2000, 2021), # This focuses the x-axis on the range of interest
                     clip = 'off') +   # This keeps the labels from disappearing
     
-    theme_niwot() + theme(plot.margin = unit(c(0.5,4,0.5,0.5), 'cm'))
+    theme_custom() + theme(plot.margin = unit(c(0.5,4,0.5,0.5), 'cm'))
 )
 
 ## C - Impacts
@@ -767,7 +775,7 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
              color=COL2[1])+
     
     annotate(geom="text", hjust = 0,vjust = 0.3,
-             x= 2021.5, y= logisticline_max(y2, model2[[05]])[21], 
+             x= 2021.5, y= logisticline_max(y2, model2[[05]])[21]+0.0035, 
              label = levels(factor(db_yr3$Impact))[5],
              color=COL2[5])+
     
@@ -784,7 +792,7 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
     coord_cartesian(xlim = c(2000, 2021), # This focuses the x-axis on the range of interest
                     clip = 'off') +     # This keeps the labels from disappearing
     
-    theme_niwot() + theme(plot.margin = unit(c(0.5,4,0.5,0.5), 'cm'))
+    theme_custom() + theme(plot.margin = unit(c(0.5,4,0.5,0.5), 'cm'))
 )
 
 
@@ -861,3 +869,5 @@ chord_plot2()
 #Convert as ggplot2 object
 chord_plot2  <- cowplot::as_grob(chord_plot2)
 chord_plot2  <- ggpubr::as_ggplot(chord_plot2)
+
+## End ------------------
