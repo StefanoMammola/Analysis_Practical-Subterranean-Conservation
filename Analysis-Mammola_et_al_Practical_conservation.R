@@ -266,7 +266,7 @@ map1 <- ggplot() +
 
 (map2 <- map1 + geom_scatterpie(aes(x=long, y=lat, group=region, r=radius),
                                 data=pie, cols = c("no","yes"), color=NA, alpha=.9) +
-    geom_scatterpie_legend(pie$radius, x=-150, y=-45, n = 2,
+    geom_scatterpie_legend(pie$radius, x= -150, y= -45, n = 2,
                            labeller = function (x) x=c(min(pie$n),max(pie$n)))+
     #scale_fill_manual(values=col_fig2)
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)
