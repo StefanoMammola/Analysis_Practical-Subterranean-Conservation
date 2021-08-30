@@ -153,6 +153,7 @@ levels(db$Impact)
 levels(db$Conservation_Group)
 levels(db$Conservation_Action)
 
+
 #Summary statistics
 table(db_unique$Source) ; sum(table(db_unique$Source)) # N° of unique sources
 table(db$Tested_statistically) ; table(db$Tested_statistically)[2] / sum(table(db$Tested_statistically)) #N° and % testing
@@ -727,7 +728,7 @@ levels(db_yr3$Impact)[3] <- "Climate change"
 levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
 
 (Plot_trend2 <- ggplot() +
-    ylab("Proportion of conservation actions") + xlab(NULL) + ylim(0,0.3)+
+    ylab("Proportion") + xlab(NULL) + ylim(0,0.3)+
     #trend lines
     geom_line(aes(y = logisticline(y2,model2[[03]]), x = y2), colour = COL2[3],linetype="solid",size=1.1,alpha=alpha1)+
     geom_line(aes(y = logisticline(y2,model2[[04]]), x = y2), colour = COL2[4],linetype="solid",size=1.1,alpha=alpha1)+
