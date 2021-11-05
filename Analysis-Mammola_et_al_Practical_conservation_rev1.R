@@ -9,7 +9,6 @@
 
 # Analysis performed with R (v. R 4.1.0) and R studio (v. 1.4.1103)
 # Authors (code): Stefano Mammola & Melissa B. Meierhofer
-# Location: Helsinki, May-Aug 2021
 
 ###############################################################
 
@@ -27,6 +26,7 @@ library("ggpubr")
 library("grid")
 library("gridExtra")
 library("maps")
+library("rsq")
 library("parameters")
 library("performance")
 library("scatterpie")
@@ -119,7 +119,8 @@ COL  <- c(rep("grey40",4),"darkgoldenrod2","brown4")
 COL2 <- c("blue", "palevioletred4",
           rep("grey40",2), #n.s.
           "seagreen4", 
-          rep("grey40",2), #n.s.
+          "purple",
+          "grey40", #n.s.
           "black")
 
 alpha1 <- 0.2
@@ -136,9 +137,6 @@ alpha3 <- 0.6
 
 db <- read.csv(file = "Data/Database_Practical_conservation_rev1.csv", sep='\t', dec='.',header=T,as.is=F)
 
-str(db)
-summary(db)
-
 #Database only with distinct paper
 db_unique <- distinct(db, ID, .keep_all = TRUE) 
 
@@ -153,13 +151,18 @@ levels(db$Impact)
 levels(db$Conservation_Group)
 levels(db$Conservation_Action)
 
-
-#Summary statistics
+#Summary statistics (Literature)
 table(db_unique$Source) ; sum(table(db_unique$Source)) # N° of unique sources
-table(db$Tested_statistically) ; table(db$Tested_statistically)[2] / sum(table(db$Tested_statistically)) #N° and % testing
+
+
 mean(table(db$ID)) ; SE(table(db$ID)) # mean number of actions/paper
 
-round(table(db$Tested_statistically == "yes",db$Conservation_Action)[2,]/table(db$Conservation_Action),2)#% testing by conservation action
+#Summary statistics (Testing)
+table(db$Tested_statistically)[2] / sum(table(db$Tested_statistically)) #N° and % testing
+
+round(table(db$Tested_statistically == "yes",db$Conservation_Action)[2,]/table(db$Conservation_Action),2) #% testing by conservation action
+
+table(db[db$Tested_statistically == "yes",]$Pearson_r_conversion)/sum(table(db[db$Tested_statistically == "yes",]$Pearson_r_conversion)) #% of usable statistics
 
 #Redefining impact
 db$Impact2 <- db$Impact
@@ -294,7 +297,7 @@ bar_1$Var2 <- factor(bar_1$Var2,levels = c("Alien species\nPathogens","Climate\n
     geom_text(aes(label=Freq), vjust=-1, color="black",
               position = position_dodge(0.9), size=2.5)+
     
-    ylim(0,315)+
+    ylim(0,320)+
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = "Frequency")+
     theme_custom()+
@@ -331,7 +334,7 @@ bar_3$Var2 <- factor(bar_3$Var2,levels = c("Anchialine\n& Marine","Groundwater",
     geom_text(aes(label=Freq), vjust=-1, color="black",
               position = position_dodge(0.9), size=2.5)+
     
-    ylim(0,750)+
+    ylim(0,810)+
     
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = "Frequency")+
@@ -352,6 +355,7 @@ table(bar_4$Taxon_Group) / sum(table(bar_4$Taxon_Group)) # %
 
 bar_4 <- data.frame(table(bar_4$Tested_statistically, bar_4$Taxon_Group))
 
+
 bar_4$Var2 <- factor(bar_4$Var2, levels = c("Arthropoda","Other invertebrates",
                                            "Bats","Other vertebrates",
                                            "Plants","Microorganisms",
@@ -362,7 +366,7 @@ bar_4$Var2 <- factor(bar_4$Var2, levels = c("Arthropoda","Other invertebrates",
     geom_bar(stat="identity",position=position_dodge(), alpha=1, color = "grey20")+
     geom_text(aes(label=Freq), vjust=-1, color="black",
               position = position_dodge(0.9), size=2.5)+
-    
+    ylim(0,442)+
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = NULL)+
     theme_custom()+
@@ -383,7 +387,7 @@ table(db$Conservation_Action) / sum(table(db$Conservation_Action)) # %
     geom_bar(stat="identity",position=position_dodge(), alpha=1,color = "grey20")+
     geom_text(aes(label=Freq), vjust=-1, color="black",
               position = position_dodge(0.9), size=2.5)+
-    ylim(0,400)+
+    ylim(0,420)+
     
     scale_fill_manual("",labels=c("Not tested", "Tested"),values=col_fig2)+
     labs(title=NULL, subtitle = NULL,x=NULL, y = NULL)+
@@ -396,7 +400,7 @@ table(db$Conservation_Action) / sum(table(db$Conservation_Action)) # %
 
 # Arrange on a grid -------------------------------------------------------
 
-pdf(file = "Figure/Figure_2.pdf", width = 10, height =11)
+pdf(file = "Figure/Figure_2.pdf", width = 11, height =12)
 
 ggpubr::ggarrange(map2,
                   ggpubr::ggarrange(bar_p2, 
@@ -519,9 +523,9 @@ glm <- glm[glm$yr > 1999,] #selecting last 20 years
 
 m1  <- glm(cbind(tested,untested) ~ yr, data = glm, family = "binomial")
 
-performance::check_overdispersion(m1)
-performance::check_model(m1)
-
+performance::check_overdispersion(m1) #no
+rsq::rsq(m1) #0.25
+  
 (pM1 <- parameters::model_parameters(m1))
 
 y <- seq(from = min(glm$yr), to = max(glm$yr), 1)
@@ -543,10 +547,10 @@ y <- seq(from = min(glm$yr), to = max(glm$yr), 1)
                             " ± ",
                             round(pM1$SE[2],2),
                             "; p= ",
-                            round(pM1$p[2],3),
-                            sep=''),size = 4)+
+                            round(pM1$p[2],3),sep=''),size = 4)+
     
     theme_custom() )
+
   
 #add missing years for the plot
 yr <- seq(from = range(as.numeric(as.character(bar_1$yr)))[1], to = range(as.numeric(as.character(bar_1$yr)))[2], by = 1)
@@ -580,7 +584,7 @@ Plot_trend0 <- ggplot(bar_1, aes(x=yr, y=as.numeric(N), fill=Tested))+
 
 #add the inset
 
-(Plot_trend0 <- Plot_trend0  + annotation_custom(ggplotGrob(inset),xmin=1965,xmax=1990,ymin=20,ymax=60))
+(Plot_trend0 <- Plot_trend0  + annotation_custom(ggplotGrob(inset),xmin=1965,xmax=2000,ymin=20,ymax=65))
 
 ## B - Conservation actions
 
@@ -614,8 +618,14 @@ performance::check_model(model[[4]])
 performance::check_model(model[[5]])
 performance::check_model(model[[6]])
 
-# Model summary 
+rsq::rsq(model[[1]]) 
+rsq::rsq(model[[2]])
+rsq::rsq(model[[3]])
+rsq::rsq(model[[4]])
+rsq::rsq(model[[5]])
+rsq::rsq(model[[6]])
 
+# Model summary 
 for (i in 1:nlevels(factor(db_yr2$Cons))) {
   
   message(paste("::::::  ",levels(factor(db_yr2$Cons))[i],"  :::::"))
@@ -628,7 +638,7 @@ for (i in 1:nlevels(factor(db_yr2$Cons))) {
 y2 <- seq(from = min(db_yr2$yr), to = max(db_yr2$yr), 1) #temporal series of interest
 
 (Plot_trend1 <- ggplot() +
-    ylab(NULL) + xlab(NULL)+ ylim(0,0.3)+
+    ylab(NULL) + xlab(NULL)+ ylim(0,0.25)+
     #trend lines
     geom_line(aes(y = logisticline(y2,model[[1]]), x = y2), colour = COL[1],linetype="solid",size=1.1,alpha=alpha1)+
     geom_line(aes(y = logisticline(y2,model[[2]]), x = y2), colour = COL[2],linetype="solid",size=1.1,alpha=alpha1)+
@@ -652,7 +662,7 @@ y2 <- seq(from = min(db_yr2$yr), to = max(db_yr2$yr), 1) #temporal series of int
     
     #Text
     annotate(geom="text", hjust = 0,vjust = 0.3,
-             x= 2021.5, y= logisticline_max(y2, model[[01]])[21], 
+             x= 2021.5, y= logisticline_max(y2, model[[01]])[21]+0.005, 
              label = levels(factor(db_yr2$Cons))[1],
              color="black",alpha=alpha3)+
     
@@ -662,7 +672,7 @@ y2 <- seq(from = min(db_yr2$yr), to = max(db_yr2$yr), 1) #temporal series of int
              color="black",alpha=alpha3)+
     
     annotate(geom="text", hjust = 0,vjust = 0,
-             x= 2021.5, y= logisticline_max(y2, model[[03]])[21], 
+             x= 2021.5, y= logisticline_max(y2, model[[03]])[21]-0.01, 
              label = levels(factor(db_yr2$Cons))[3],
              color="black",alpha=alpha3)+
     
@@ -710,17 +720,26 @@ for (i in levels(factor(db_yr3$Impact))) {
   model2[[i]] <- glm(cbind(N,tot) ~ yr, data = db_i, family = "binomial")
   par2[[i]] <- parameters::model_parameters(model2[[i]])
   
-}  
+} 
+
+##
+rsq::rsq(model2[[1]]) 
+rsq::rsq(model2[[2]])
+rsq::rsq(model2[[3]])
+rsq::rsq(model2[[4]])
+rsq::rsq(model2[[5]])
+rsq::rsq(model2[[6]])
+rsq::rsq(model2[[7]])
+rsq::rsq(model2[[8]])
 
 # Model summary 
-
 for (i in 1:nlevels(factor(db_yr3$Impact))) {
   
   message(paste("::::::  ",levels(factor(db_yr3$Impact))[i],"  :::::"))
   
   print(parameters::model_parameters(model2[[i]]))   
   
-}  #Pollution, Pathogens, Visitors significant. Climate change borderline significant.
+}  #Pollution, Pathogens, Visitors significant, Climate change borderline significant.
 
 #Renaming levels
 levels(db_yr3$Impact)[1] <- "Alien species\n& Pathogens"
@@ -728,9 +747,9 @@ levels(db_yr3$Impact)[3] <- "Climate change"
 levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
 
 (Plot_trend2 <- ggplot() +
-    ylab("Proportion") + xlab(NULL) + ylim(0,0.3)+
+    ylab("Proportion") + xlab(NULL) + ylim(0,0.25)+
     #trend lines
-    geom_line(aes(y = logisticline(y2,model2[[03]]), x = y2), colour = COL2[3],linetype="solid",size=1.1,alpha=alpha1)+
+    #geom_line(aes(y = logisticline(y2,model2[[03]]), x = y2), colour = COL2[3],linetype="solid",size=1.1,alpha=alpha1)+
     geom_line(aes(y = logisticline(y2,model2[[04]]), x = y2), colour = COL2[4],linetype="solid",size=1.1,alpha=alpha1)+
     geom_line(aes(y = logisticline(y2,model2[[06]]), x = y2), colour = COL2[6],linetype="solid",size=1.1,alpha=alpha1)+
     geom_line(aes(y = logisticline(y2,model2[[07]]), x = y2), colour = COL2[7],linetype="solid",size=1.1,alpha=alpha1)+
@@ -741,10 +760,8 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
     geom_line(aes(y = logisticline(y2,model2[[02]]), x = y2), colour = COL2[2],linetype="solid",size=1.1)+
     
     #confidence intervals
-    geom_ribbon(aes(ymax = logisticline_max(y2, model2[[03]]),
-                    ymin = logisticline_min(y2, model2[[03]]),x = y2),alpha = alpha2,fill=COL2[3])+
-    geom_ribbon(aes(ymax = logisticline_max(y2, model2[[04]]),
-                    ymin = logisticline_min(y2, model2[[04]]),x = y2),alpha = alpha2,fill=COL2[4])+
+   #  geom_ribbon(aes(ymax = logisticline_max(y2, model2[[04]]),
+   #                 ymin = logisticline_min(y2, model2[[04]]),x = y2),alpha = alpha2,fill=COL2[4])+
     geom_ribbon(aes(ymax = logisticline_max(y2, model2[[06]]),
                     ymin = logisticline_min(y2, model2[[06]]),x = y2),alpha = alpha2,fill=COL2[6])+
     geom_ribbon(aes(ymax = logisticline_max(y2, model2[[07]]),
@@ -760,20 +777,21 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
                     ymin = logisticline_min(y2, model2[[02]]),x = y2),alpha = 0.4,fill=COL2[2])+
     
     #Text
+    annotate(geom="text", hjust = 0,vjust = 0.3,
+             x= 2021.5, y= logisticline_max(y2, model2[[01]])[21]-0.03, 
+             label = levels(factor(db_yr3$Impact))[1],
+             color=COL2[1])+
+    
+    annotate(geom="text", hjust = 0,vjust = 0.3,
+             x= 2021.5, y= logisticline_max(y2, model2[[02]])[21], 
+             label = levels(factor(db_yr3$Impact))[2],
+             color=COL2[2])+
+    
     annotate(geom="text", hjust = 0,vjust = 0,
              x= 2021.5, y= logisticline_max(y2, model2[[04]])[21]-0.015, 
              label = levels(factor(db_yr3$Impact))[4],
              color=COL2[4],alpha=alpha3)+
     
-    annotate(geom="text", hjust = 0,vjust = 0,
-             x= 2021.5, y= logisticline_max(y2, model2[[03]])[21]+0.003, 
-             label = paste(levels(factor(db_yr3$Impact))[3],"| Habitat change"),
-             color=COL2[3],alpha=alpha3)+
-    
-    annotate(geom="text", hjust = 0,vjust = 0.3,
-             x= 2021.5, y= logisticline_max(y2, model2[[01]])[21]-0.044, 
-             label = levels(factor(db_yr3$Impact))[1],
-             color=COL2[1])+
     
     annotate(geom="text", hjust = 0,vjust = 0.3,
              x= 2021.5, y= logisticline_max(y2, model2[[05]])[21]+0.0035, 
@@ -781,14 +799,19 @@ levels(db_yr3$Impact)[5] <- "Overexploitation\n& Poaching"
              color=COL2[5])+
     
     annotate(geom="text", hjust = 0,vjust = 0.3,
-             x= 2021.5, y= logisticline_max(y2, model2[[08]])[21], 
-             label = levels(factor(db_yr3$Impact))[8],
-             color=COL2[8])+
+             x= 2021.5, y= logisticline_max(y2, model2[[06]])[21]-0.01, 
+             label = levels(factor(db_yr3$Impact))[6],
+             color=COL2[6])+
     
     annotate(geom="text", hjust = 0,vjust = 0.3,
-             x= 2021.5, y= logisticline_max(y2, model2[[02]])[21], 
-             label = levels(factor(db_yr3$Impact))[2],
-             color=COL2[2])+
+             x= 2021.5, y= logisticline_max(y2, model2[[07]])[21], 
+             label = levels(factor(db_yr3$Impact))[7],
+             color=COL2[7])+
+    
+    annotate(geom="text", hjust = 0,vjust = 0.3,
+             x= 2021.5, y= logisticline_max(y2, model2[[08]])[21]+0.01, 
+             label = levels(factor(db_yr3$Impact))[8],
+             color=COL2[8])+
     
     coord_cartesian(xlim = c(2000, 2021), # This focuses the x-axis on the range of interest
                     clip = 'off') +     # This keeps the labels from disappearing
@@ -813,62 +836,97 @@ ggpubr::ggarrange(Plot_trend0, ggpubr::ggarrange(Plot_trend2, Plot_trend1,
 
 dev.off()
 
-## End of analysis ------------------
+## End of main analysis ------------------
 
-# Extra figures
+#######################################################
+#######################################################
+# Re-doing the analysis with only Web of Science papers
+#######################################################
+#######################################################
 
-## CHORD DIAGRAM 2 - Conservation action vs Taxonomy
+db_sub <- db[db$Source != "Other",] ; db_sub <- droplevels(db_sub)
 
-chord_plot2 <- function(){
-  require("gridGraphics")
-  
-  chord2 <- data.frame(Conservation_Action = db$Conservation_Group, Taxonomy = db$Taxon_Group)
-  
-  ## Duplicating multiple level variables
-  chord2 <- semi_colon_splitter(input1 = chord2$Taxonomy,
-                                input2 = chord2$Conservation_Action, 
-                                names =c("Taxonomy","Conservation_Action"))
-  
-  # removing none specific
-  chord2     <- chord2[!chord2$Taxonomy == "Not specific",] ; chord2$Taxonomy <- droplevels(chord2$Taxonomy)
-  chord2$Taxonomy <- as.factor(chord2$Taxonomy)
-  
-  #renamic levels
-  levels(chord2$Taxonomy) <- c("Arthropods","Bats","Microorgansims","Other\ninvertebrates","Other\nvertebrates","Plants")
-  
-  mat2 <- data.frame(table(chord2$Conservation_Action,chord2$Taxonomy))
-  
-  colnames(mat2) <- c("from", "to", "value")
-  
-  levels(mat2$from)
-  levels(mat2$to)
-  
-  nlevels(mat2$from)
-  nlevels(mat2$to)
-  
-  order_l2 <- c("Education", "Restoration", "Regulation",
-                "Monitoring", "Assessment", "Protection", 
-                levels(mat2$to)[3],
-                levels(mat2$to)[1],
-                levels(mat2$to)[4],
-                levels(mat2$to)[2],
-                levels(mat2$to)[5],
-                levels(mat2$to)[6])
-  
-  col_l2 <- c("lightcyan4","brown4","darkgoldenrod2","darkblue","cyan4","blueviolet",rep("grey30",nlevels(mat2$to)))
-  
-  circos.clear()
-  circos.par(gap.after=c(rep(3,nlevels(mat2$from)-1),10,rep(3,nlevels(mat2$to)-1),10))
-  
-  circlize::chordDiagram(mat2,
-                         order = order_l2,
-                         grid.col = col_l2)
-}
+db_sub_unique <- distinct(db_sub, ID, .keep_all = TRUE) 
 
-chord_plot2()
+#Overall temporal trend in testing
+bar_1 <- data.frame(table(db_sub_unique$Year_publication,db_sub_unique$Tested_statistically)) ; colnames(bar_1) <- c("yr","Tested","N")
+bar_1$yr <- as.numeric(as.character(bar_1$yr))
 
-#Convert as ggplot2 object
-chord_plot2  <- cowplot::as_grob(chord_plot2)
-chord_plot2  <- ggpubr::as_ggplot(chord_plot2)
+# Has the frequency of tested paper changed over time?
+glm <- data.frame(yr = unique(bar_1$yr),
+                  tested = bar_1[bar_1$Tested=="yes",]$N, 
+                  untested = bar_1[bar_1$Tested=="no",]$N)
+
+glm <- glm[glm$yr > 1999,] #selecting last 20 years
+
+m1  <- glm(cbind(tested,untested) ~ yr, data = glm, family = "binomial")
+
+(pM1 <- parameters::model_parameters(m1))
+
+## B - Conservation actions
+
+tot <- data.frame(table(db_sub$Year_publication)) #total number of publication/year
+
+# Creating a database
+db_sub_yr2    <- data.frame(table(db_sub$Year_publication,db_sub$Conservation_Group))
+db_sub_yr2    <- data.frame(db_sub_yr2, tot = rep(tot$Freq,6)) ; colnames(db_sub_yr2) <- c("yr","Cons","N","tot")
+db_sub_yr2$yr <- as.numeric(as.character(db_sub_yr2$yr))
+
+# Selecting papers from 2000 onward
+db_sub_yr2 <- db_sub_yr2[db_sub_yr2$yr > 1999,]
+
+# Modelling the temporal trends
+model   <- list()
+par     <- list()
+
+for (i in levels(factor(db_sub_yr2$Cons))) {
+  
+  db_sub_i <- db_sub_yr2[db_sub_yr2$Cons==i, ]
+  model[[i]]   <- glm(cbind(N,tot) ~ yr, data = db_sub_i, family = "binomial")
+  par[[i]] <- parameters::model_parameters(model[[i]])
+  
+}  
+
+# Model summary 
+for (i in 1:nlevels(factor(db_sub_yr2$Cons))) {
+  
+  message(paste("::::::  ",levels(factor(db_sub_yr2$Cons))[i],"  :::::"))
+  
+  print(parameters::model_parameters(model[[i]]))   
+  
+}  #Restoration and regulation significant
+
+
+## C - Impacts
+
+# Creating a database
+db_sub_yr3 <- data.frame(table(db_sub$Year_publication,db_sub$Impact2))
+db_sub_yr3 <- data.frame(db_sub_yr3, tot = rep(tot$Freq, nlevels(db_sub_yr3$Var2))) ; colnames(db_sub_yr3) <- c("yr","Impact","N","tot")
+db_sub_yr3$yr <- as.numeric(as.character(db_sub_yr3$yr))
+
+# Selecting years and removing all
+db_sub_yr3 <- db_sub_yr3[db_sub_yr3$yr > 1999,]
+db_sub_yr3 <- db_sub_yr3[!db_sub_yr3$Impact == "All",]
+
+# Modelling the temporal trends
+model2 <- list()
+par2   <- list()
+
+for (i in levels(factor(db_sub_yr3$Impact))) {
+  
+  db_sub_i <- db_sub_yr3[db_sub_yr3$Impact==i, ]
+  model2[[i]] <- glm(cbind(N,tot) ~ yr, data = db_sub_i, family = "binomial")
+  par2[[i]] <- parameters::model_parameters(model2[[i]])
+  
+} 
+
+# Model summary 
+for (i in 1:nlevels(factor(db_sub_yr3$Impact))) {
+  
+  message(paste("::::::  ",levels(factor(db_sub_yr3$Impact))[i],"  :::::"))
+  
+  print(parameters::model_parameters(model2[[i]]))   
+  
+}  
 
 ## End ------------------
