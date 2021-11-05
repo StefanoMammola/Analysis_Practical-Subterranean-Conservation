@@ -154,15 +154,40 @@ levels(db$Conservation_Action)
 #Summary statistics (Literature)
 table(db_unique$Source) ; sum(table(db_unique$Source)) # N° of unique sources
 
-
 mean(table(db$ID)) ; SE(table(db$ID)) # mean number of actions/paper
 
 #Summary statistics (Testing)
 table(db$Tested_statistically)[2] / sum(table(db$Tested_statistically)) #N° and % testing
 
-round(table(db$Tested_statistically == "yes",db$Conservation_Action)[2,]/table(db$Conservation_Action),2) #% testing by conservation action
 
-table(db[db$Tested_statistically == "yes",]$Pearson_r_conversion)/sum(table(db[db$Tested_statistically == "yes",]$Pearson_r_conversion)) #% of usable statistics
+#How many estimates would be usable for meta analysis?
+n_studies    <- c() 
+n_estimates  <- c()
+perc_testing <- c()
+usable       <- c()
+unusable     <- c()
+perc_usable  <- c()
+
+for(i in 1:nlevels(db$Conservation_Action)){
+
+  db_i_tot <- db[db$Conservation_Action == levels(db$Conservation_Action)[i],]
+  db_i     <- db_i_tot[db_i_tot$Tested_statistically == "yes",]
+  
+  table_i <- table(db_i$Pearson_r_conversion) #% of usable statistics
+  n_studies      <- c(n_studies, nrow(distinct(db_i, ID, .keep_all = TRUE)) ) #unique studies
+  n_estimates    <- c(n_estimates, nrow(db_i) ) #unique estimates
+  perc_testing   <- c(perc_testing, round(nrow(db_i)/nrow(db_i_tot),2) )
+  usable         <- c(usable, sum(table_i[1],table_i[3]))
+  unusable       <- c(unusable, sum(table_i[2]))
+  perc_usable    <- c(perc_usable, (usable[i]/unusable[i]))
+  
+}
+
+Table_1 <- data.frame(table(db$Conservation_Action)) # Number of estimates
+
+Table_1 <- data.frame(Table_1, n_studies,n_estimates,perc_testing,usable,unusable,perc_usable)
+
+write.csv(Table_1,"Tables/Table_1.csv")
 
 #Redefining impact
 db$Impact2 <- db$Impact
@@ -618,12 +643,14 @@ performance::check_model(model[[4]])
 performance::check_model(model[[5]])
 performance::check_model(model[[6]])
 
-rsq::rsq(model[[1]]) 
-rsq::rsq(model[[2]])
-rsq::rsq(model[[3]])
-rsq::rsq(model[[4]])
-rsq::rsq(model[[5]])
-rsq::rsq(model[[6]])
+# R^2
+for (i in 1:nlevels(factor(db_yr2$Cons))) {
+  
+  message(paste("::::::  ",levels(factor(db_yr2$Cons))[i],"  :::::"))
+  
+  print(rsq::rsq(model[[i]]))   
+  
+} 
 
 # Model summary 
 for (i in 1:nlevels(factor(db_yr2$Cons))) {
@@ -722,15 +749,14 @@ for (i in levels(factor(db_yr3$Impact))) {
   
 } 
 
-##
-rsq::rsq(model2[[1]]) 
-rsq::rsq(model2[[2]])
-rsq::rsq(model2[[3]])
-rsq::rsq(model2[[4]])
-rsq::rsq(model2[[5]])
-rsq::rsq(model2[[6]])
-rsq::rsq(model2[[7]])
-rsq::rsq(model2[[8]])
+# R^2
+for (i in 1:nlevels(factor(db_yr3$Impact))) {
+  
+  message(paste("::::::  ",levels(factor(db_yr3$Impact))[i],"  :::::"))
+  
+  print(rsq::rsq(model2[[i]]))   
+  
+} 
 
 # Model summary 
 for (i in 1:nlevels(factor(db_yr3$Impact))) {
