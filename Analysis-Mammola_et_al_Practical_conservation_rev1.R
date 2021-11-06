@@ -159,7 +159,6 @@ mean(table(db$ID)) ; SE(table(db$ID)) # mean number of actions/paper
 #Summary statistics (Testing)
 table(db$Tested_statistically)[2] / sum(table(db$Tested_statistically)) #N° and % testing
 
-
 #How many estimates would be usable for meta analysis?
 n_studies    <- c() 
 n_estimates  <- c()
@@ -179,7 +178,7 @@ for(i in 1:nlevels(db$Conservation_Action)){
   perc_testing   <- c(perc_testing, round(nrow(db_i)/nrow(db_i_tot),2) )
   usable         <- c(usable, sum(table_i[1],table_i[3]))
   unusable       <- c(unusable, sum(table_i[2]))
-  perc_usable    <- c(perc_usable, (usable[i]/unusable[i]))
+  perc_usable    <- c(perc_usable, (usable[i]/sum(table_i)))
   
 }
 
@@ -188,6 +187,7 @@ Table_1 <- data.frame(table(db$Conservation_Action)) # Number of estimates
 Table_1 <- data.frame(Table_1, n_studies,n_estimates,perc_testing,usable,unusable,perc_usable)
 
 write.csv(Table_1,"Tables/Table_1.csv")
+
 
 #Redefining impact
 db$Impact2 <- db$Impact
