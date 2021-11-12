@@ -188,7 +188,6 @@ Table_1 <- data.frame(Table_1, n_studies,n_estimates,perc_testing,usable,unusabl
 
 write.csv(Table_1,"Tables/Table_1.csv")
 
-
 #Redefining impact
 db$Impact2 <- db$Impact
 
@@ -231,15 +230,21 @@ pie <- data.frame(region = levels(pie_1$Var1),
                   yes = pie_1$Freq[c(nlevels(pie_1$Var1)+1):c(nrow(pie_1))],
                   radius = radius$Freq)
 
-# Using map_data()
-
+# Loading data
 world <- map_data("world")
+biog_regions <- raster::shapefile("Biogeographic_regions/regioni biogeografiche_Biological Review.shp")
 
 map1 <- ggplot() +
     geom_map(map = world, data = world,
              aes(map_id = region), 
-             color = "gray65", fill = "gray65", size = 0.3) +
+             color = "gray45", fill = "gray45", size = 0.3) +
+  
     labs(title = NULL) +
+  
+    #Add bioregion
+    geom_path(data = fortify(biog_regions),
+            aes(x = long, y = lat, group = group),
+            color = 'grey70', size = .2) +
     
     #global
     annotate(geom="text", x=-154, y=35, label="Global",
