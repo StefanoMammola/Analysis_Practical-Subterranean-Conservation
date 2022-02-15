@@ -135,7 +135,7 @@ alpha3 <- 0.6
 
 # Loading the Database ----------------------------------------------------
 
-db <- read.csv(file = "Data/Database_Practical_conservation_rev1.csv", sep='\t', dec='.',header=T,as.is=F)
+db <- read.csv(file = "Data/Database_Practical_conservation_rev2.csv", sep='\t', dec='.',header=T,as.is=F)
 
 #Database only with distinct paper
 db_unique <- distinct(db, ID, .keep_all = TRUE) 
@@ -184,23 +184,27 @@ for(i in 1:nlevels(db$Conservation_Action)){
 
 Table_1 <- data.frame(table(db$Conservation_Action)) # Number of estimates
 
-Table_1 <- data.frame(Table_1, n_studies,n_estimates,perc_testing,usable,unusable,perc_usable)
+(Table_1 <- data.frame(Table_1, n_studies,n_estimates,perc_testing,usable,unusable,perc_usable))
 
 write.csv(Table_1,"Tables/Table_1.csv")
 
 #Redefining impact
 db$Impact2 <- db$Impact
 
-levels(db$Impact2)   <- c("Alien species\nPathogens",
+levels(db$Impact2)   <- c("Alien species\n& Pathogens",
                           "All",
                           "Climate\nchange",
                           "None",
-                          "Alien species\nPathogens",
-                          "Overexploitation\nPoaching",
+                          "Alien species\n& Pathogens",
+                          "Overexploitation\n& Poaching",
                           "Pollution",
-                          "Habitat change\n(subterranean)",
-                          "Habitat change\n(surface)",
+                          "Subterranean\nhabitat change",
+                          "Surface\nhabitat change",
                           "Visitors")
+
+#Rename conservation
+levels(db$Conservation_Action)[4] <- "Ex-situ conservation"
+levels(db$Conservation_Action)[5] <- "Gating"
 
 #####################################
 ### FIGURE 2:::::::::::::::::::::::::
@@ -317,8 +321,8 @@ levels(bar_1$Var2)[2] <- "Multiple"
 table(db$Impact2) # tot
 table(db$Impact2)/ sum(table(db$Impact2)) # %
 
-bar_1$Var2 <- factor(bar_1$Var2,levels = c("Alien species\nPathogens","Climate\nchange","Overexploitation\nPoaching",
-                                           "Pollution","Habitat change\n(subterranean)","Habitat change\n(surface)",     
+bar_1$Var2 <- factor(bar_1$Var2,levels = c("Alien species\n& Pathogens","Climate\nchange","Overexploitation\n& Poaching",
+                                           "Pollution","Subterranean\nhabitat change","Surface\nhabitat change",     
                                            "Visitors", "Multiple", "None"))  
 
 (bar_p1 <-  ggplot(bar_1, aes(x=Var2,y=Freq, fill=Var1)) +
@@ -349,11 +353,11 @@ bar_3 <- data.frame(table(bar_3$Tested_statistically,bar_3$System))
 
 #rename levels
 levels(bar_3$Var2)[1] <- "Not specific"
-levels(bar_3$Var2)[2] <- "Anchialine\n& Marine"
+levels(bar_3$Var2)[2] <- "Anchialine/Marine"
 levels(bar_3$Var2)[5] <- "Fissural\nsystems"
 
 #reoder
-bar_3$Var2 <- factor(bar_3$Var2,levels = c("Anchialine\n& Marine","Groundwater",
+bar_3$Var2 <- factor(bar_3$Var2,levels = c("Anchialine/Marine","Groundwater",
                                            "Cave","Show cave","Fissural\nsystems",
                                            "Artificial",
                                            "Not specific"))
@@ -385,11 +389,13 @@ table(bar_4$Taxon_Group) / sum(table(bar_4$Taxon_Group)) # %
 
 bar_4 <- data.frame(table(bar_4$Tested_statistically, bar_4$Taxon_Group))
 
-
 bar_4$Var2 <- factor(bar_4$Var2, levels = c("Arthropoda","Other invertebrates",
                                            "Bats","Other vertebrates",
                                            "Plants","Microorganisms",
                                            "Not specific"))
+
+levels(bar_4$Var2)[2] <- "Non-arthropod\ninvertebrates"
+levels(bar_4$Var2)[4] <- "Non-bat\nvertebrates"
 
 (bar_p3 <-  ggplot(bar_4, aes(x=Var2, y=Freq, fill=Var1)) +
     
@@ -412,6 +418,22 @@ bar_5 <- data.frame(table(db$Tested_statistically,db$Conservation_Action))
 table(db$Conservation_Action) # tot
 table(db$Conservation_Action) / sum(table(db$Conservation_Action)) # %
 
+levels(db$Conservation_Action)
+bar_5$Var2 <- factor(bar_5$Var2, levels = c("Protected area",
+                                            "Ex-situ conservation",
+                                            "Gating",
+                                            "Legislation",
+                                            "Regulate access",
+                                            "Eradication",
+                                            "Decontamination",
+                                            "Habitat creation", 
+                                            "Habitat restoration",
+                                            "Reintroduction",
+                                            "Risk assessment", 
+                                            "Prioritization",
+                                            "Education",
+                                            "Monitoring"))
+
 (bar_p4 <-  ggplot(bar_5, aes(x=Var2,y=Freq, fill=Var1)) +
     
     geom_bar(stat="identity",position=position_dodge(), alpha=1,color = "grey20")+
@@ -423,8 +445,7 @@ table(db$Conservation_Action) / sum(table(db$Conservation_Action)) # %
     labs(title=NULL, subtitle = NULL,x=NULL, y = NULL)+
     theme_custom()+
     theme(legend.position = "none",
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,
-                                     face = c(rep("plain",3),"italic",rep("plain",13))),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
           plot.margin = unit(c(0.2,0.2,0.2,0.2), 'cm'))
 )
 
@@ -453,8 +474,6 @@ dev.off()
 ## CHORD DIAGRAM 1 - Conservation action vs Impact
 ## https://www.data-to-viz.com/graph/chord.html
 
-levels(db$Conservation_Group)
-
 chord_plot1  <- function(){
   require("gridGraphics")
   
@@ -479,14 +498,14 @@ chord_plot1  <- function(){
   }
   
   #renaming levels
-  levels(chord$Impact) <- c("Alien species\nPathogens",
+  levels(chord$Impact) <- c("Alien species\n& Pathogens",
                             "Climate\nchange",
                             "None",
-                            "Alien species\nPathogens",
-                            "Overexploitation\nPoaching",
+                            "Alien species\n& Pathogens",
+                            "Overexploitation\n& Poaching",
                             "Pollution",
-                            "    Habitat change\n    (subterranean)",#space is needed for graphical reasons
-                            "Habitat change\n(surface)",
+                            "Subterranean\nhabitat change",#space is needed for graphical reasons
+                            "Surface\nhabitat change",
                             "Visitors")
   
   mat <- data.frame(table(chord$Conservation_Action, chord$Impact))
@@ -501,10 +520,10 @@ chord_plot1  <- function(){
   
   order_l <- c("Education", "Restoration", "Regulation",
                "Monitoring", "Assessment", "Protection", 
-               "Alien species\nPathogens","Pollution", 
-               "Climate\nchange", "Habitat change\n(surface)",
-               "Visitors" ,"Overexploitation\nPoaching",
-               "    Habitat change\n    (subterranean)",#space is needed for graphical reasons
+               "Alien species\n& Pathogens","Pollution", 
+               "Climate\nchange", "Surface\nhabitat change",
+               "Visitors" ,"Overexploitation\n& Poaching",
+               "Subterranean\nhabitat change",#space is needed for graphical reasons
                "None")
   
   col_l <- c("lightcyan4","brown4","darkgoldenrod2","darkblue","cyan4","blueviolet",rep("grey30",nlevels(mat$to)))
@@ -572,17 +591,18 @@ y <- seq(from = min(glm$yr), to = max(glm$yr), 1)
     geom_point(aes(y= ((glm$tested)/(glm$tested + glm$untested)),x=glm$yr), col = "black", alpha = 0.5)+
     
     annotate("text", x = 2011, y = 0.35,
-             label =  paste("GLM (n= 22): ",
+             label =  paste("GLM (",
+                            "N", 
+                            " = 22): ",
                             round(pM1$Coefficient[2],2),
                             " ± ",
                             round(pM1$SE[2],2),
-                            "; p= ",
+                            "; p = ",
                             round(pM1$p[2],3),sep=''),size = 4)+
     
     theme_custom() )
 
-  
-#add missing years for the plot
+  #add missing years for the plot
 yr <- seq(from = range(as.numeric(as.character(bar_1$yr)))[1], to = range(as.numeric(as.character(bar_1$yr)))[2], by = 1)
 yr <- yr[!yr %in% bar_1$yr]
 
