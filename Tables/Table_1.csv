@@ -1,15 +1,15 @@
-"","Var1","Freq","n_studies","n_estimates","perc_testing","usable","unusable","perc_usable"
-"1","Decontamination",54,6,19,0.35,2,17,0.105263157894737
-"2","Education",107,0,0,0,0,0,NA
+"","Var1","Freq","n_studies","n_estimates","perc_testing","usable","unusable","round.perc_usable..2."
+"1","Decontamination",35,6,19,0.54,2,17,0.11
+"2","Education",105,0,0,0,0,0,0
 "3","Eradication",15,1,4,0.27,0,4,0
-"4","Ex-situ",10,0,0,0,0,0,NA
-"5","Gate",174,16,125,0.72,71,54,0.568
-"6","Habitat creation",15,1,5,0.33,4,1,0.8
-"7","Habitat restoration",118,3,16,0.14,15,1,0.9375
-"8","Legislation",106,0,0,0,0,0,NA
-"9","Monitoring",453,17,56,0.12,26,30,0.464285714285714
-"10","Prioritization",222,13,45,0.2,10,35,0.222222222222222
-"11","Protected area",203,1,1,0,1,0,1
-"12","Regulate access",132,6,55,0.42,44,11,0.8
-"13","Reintroduction",5,0,0,0,0,0,NA
-"14","Risk assessment",507,37,284,0.56,208,76,0.732394366197183
+"4","Ex-situ",10,0,0,0,0,0,0
+"5","Gate",174,16,125,0.72,71,54,0.57
+"6","Habitat creation",13,1,5,0.38,4,1,0.8
+"7","Habitat restoration",115,3,16,0.14,15,1,0.94
+"8","Legislation",95,0,0,0,0,0,0
+"9","Monitoring",399,14,45,0.11,20,25,0.44
+"10","Prioritization",213,12,44,0.21,10,34,0.23
+"11","Protected area",183,1,1,0.01,1,0,1
+"12","Regulate access",127,6,55,0.43,44,11,0.8
+"13","Reintroduction",5,0,0,0,0,0,0
+"14","Risk assessment",465,37,295,0.63,208,87,0.71
