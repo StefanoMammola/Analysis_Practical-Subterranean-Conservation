@@ -92,7 +92,7 @@ for(i in 1:nlevels(db$Conservation_Action)){
 }
 
 Table_1 <- data.frame(table(db$Conservation_Action)) # Number of estimates
-Table_1 <- data.frame(Table_1, n_studies,n_estimates,perc_testing,usable,unusable,round(perc_usable,2))
+Table_1 <- data.frame(Table_1, n_studies,n_estimates,perc_testing,usable,unusable,perc_usable = round(perc_usable,2))
 Table_1[is.na(Table_1)] <- 0
 
 write.csv(Table_1,"Tables/Table_1.csv")
@@ -326,6 +326,10 @@ bar_5 <- data.frame(table(db$Tested_statistically,db$Conservation_Action))
 #summary stats
 table(db$Conservation_Action) # tot
 table(db$Conservation_Action) / sum(table(db$Conservation_Action)) # %
+
+Table_1
+
+
 
 levels(db$Conservation_Action)
 bar_5$Var2 <- factor(bar_5$Var2, levels = c("Protected area",
